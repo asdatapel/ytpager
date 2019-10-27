@@ -1,0 +1,50 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Videos</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+<div class="page">
+    <div class="header">
+        <h2>{{.Channel.Name}}</h2>
+        <h3> Page {{.Index}} / {{.Channel.NumPages}}
+            <span>
+                <a class="nav-button" {{if gt .Index 1}}href="./{{sub .Index 1}}" {{end}}><</a>
+                <a class="nav-button" {{if lt .Index .Channel.NumPages}}href="./{{add1 .Index}}"{{end}}>></a>
+            </span>
+        </h3>
+    </div>
+    <ul class="image-list-small">
+        {{range .Videos}}
+        <li>
+            <a href="https://www.youtube.com/watch?v={{.Id}}" style="background-image: url('{{.ThumbnailUrl}}');"></a>
+            <div class="info">
+                <h3><a href="https://www.youtube.com/watch?v={{.Id}}">{{.Title}}</a></h3>
+                <p class="details">{{toDate "2006-01-02T15:04:05Z0700" .PublishedAt | date "Jan 2 2006"}}</p>
+            </div>
+        </li>
+        {{end}}
+    </ul>
+</div>
+</body>
+</html>
+
+<script type="text/javascript">
+    document.onkeydown = function(event) {
+        switch (event.keyCode) {
+            {{if gt .Index 1}}
+                case 37:
+                    window.location.assign("./{{sub .Index 1}}");
+                break;
+            {{end}}
+            {{if lt .Index .Channel.NumPages}}
+                case 39:
+                    window.location.assign("./{{add1 .Index}}");
+                break;
+            {{end}}
+        }
+    };
+</script>
