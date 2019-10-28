@@ -1,6 +1,7 @@
 package main
 
 import (
+	"asdatapel/ytpager/auth"
 	"asdatapel/ytpager/model"
 	"asdatapel/ytpager/service"
 	"context"
@@ -14,6 +15,13 @@ import (
 	"strings"
 
 	"github.com/Masterminds/sprig"
+	"github.com/gorilla/sessions"
+)
+
+var (
+	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
+	key   = []byte("super-secret-key")
+	store = sessions.NewCookieStore(key)
 )
 
 func ShiftPath(p string) (head, tail string) {
@@ -26,11 +34,17 @@ func ShiftPath(p string) (head, tail string) {
 }
 
 type RootRoute struct {
+	AuthRoute      *auth.AuthRoute
 	VideoListRoute *VideoListRoute
 }
 
 func (h RootRoute) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	fmt.Println(req.URL.Path)
+
+	session, err := store.Get(req, "cookie-name")
+	if err != nil {
+		http.Error(res, fmt.Errorf("failed to get user session: %v", err).Error(), http.StatusInternalServerError)
+	}
 
 	var head string
 	head, req.URL.Path = ShiftPath(req.URL.Path)
@@ -42,7 +56,9 @@ func (h RootRoute) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	} else if head == "static" {
 		http.FileServer(http.Dir("static")).ServeHTTP(res, req)
 	} else if head == "videos" {
-		h.VideoListRoute.ServeHTTP(res, req)
+		h.VideoListRoute.ServeHTTP(res, req, session)
+	} else if head == "auth" {
+		h.AuthRoute.ServeHTTP(res, req, session)
 	}
 }
 
@@ -50,7 +66,7 @@ type VideoListRoute struct {
 	ListTemplate *template.Template
 }
 
-func (h VideoListRoute) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (h VideoListRoute) ServeHTTP(res http.ResponseWriter, req *http.Request, session *sessions.Session) {
 	channelName, rest := ShiftPath(req.URL.Path)
 
 	if channelName == "" {
@@ -65,7 +81,9 @@ func (h VideoListRoute) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 
 	ctx := context.Background()
-	videoService := service.NewYoutube(ctx, "AIzaSyBnY9kpGi3myS30U3xqlKRNZeHqjbeD1TM")
+
+	client := auth.GetClient(ctx, session)
+	videoService := service.NewYoutube(ctx, client)
 
 	pageNum, _ := strconv.ParseInt(requestedPage, 0, 0)
 
@@ -89,6 +107,7 @@ func main() {
 		VideoListRoute: &VideoListRoute{
 			ListTemplate: tmpl,
 		},
+		AuthRoute: &auth.AuthRoute{},
 	}
 
 	log.Fatal(http.ListenAndServe(":80", rootRoute))

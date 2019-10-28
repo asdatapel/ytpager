@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
-	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -14,8 +14,8 @@ type Youtube struct {
 	ytservice *youtube.Service
 }
 
-func NewYoutube(ctx context.Context, apiKey string) Youtube {
-	ytservice, err := youtube.NewService(ctx, option.WithAPIKey(apiKey))
+func NewYoutube(ctx context.Context, client *http.Client) Youtube {
+	ytservice, err := youtube.New(client)
 	if err != nil {
 		log.Fatal(err)
 	}
