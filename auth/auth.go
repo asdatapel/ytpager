@@ -26,11 +26,6 @@ func GetClient(ctx context.Context, session *sessions.Session) *http.Client {
 	token.Expiry, _ = time.Parse(time.RFC3339, t)
 	token.TokenType = session.Values["TokenType"].(string)
 
-	fmt.Println("AccessToken: " + token.AccessToken)
-	fmt.Println("RefreshToken: " + token.RefreshToken)
-	fmt.Printf("Expiry: %v\n", token.Expiry)
-	fmt.Println("TokenType: " + token.TokenType)
-
 	return conf.Client(ctx, token)
 }
 
@@ -91,7 +86,7 @@ func init() {
 	conf = &oauth2.Config{
 		ClientID:     cred.Cid,
 		ClientSecret: cred.Csecret,
-		RedirectURL:  "http://localhost/auth/oauthurl",
+		RedirectURL:  "http://asadpatelytpager.mooo.com/auth/oauthurl",
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email", // You have to select your own scope from here -> https://developers.google.com/identity/protocols/googlescopes#google_sign-in
 			"https://www.googleapis.com/auth/youtube",        // You have to select your own scope from here -> https://developers.google.com/identity/protocols/googlescopes#google_sign-in
