@@ -24,19 +24,19 @@ func NewYoutube(ctx context.Context, client *http.Client) Youtube {
 }
 
 func (yt Youtube) GetChannel(name string) model.Channel {
-	channelRequest := yt.ytservice.Channels.List("id,snippet,contentDetails").ForUsername(name)
+	channelRequest := yt.ytservice.Channels.List("id, snippet, contentDetails").ForUsername(name)
 	channelResponse, err := channelRequest.Do()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("30 %v", err)
 	}
 
 	firstChannel := channelResponse.Items[0]
 	playlistId := firstChannel.ContentDetails.RelatedPlaylists.Uploads
 
-	playlistRequest := yt.ytservice.Playlists.List("id,contentDetails").Id(playlistId)
+	playlistRequest := yt.ytservice.Playlists.List("id, contentDetails").Id(playlistId)
 	playlistResponse, err := playlistRequest.Do()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("39 %v", err)
 	}
 
 	return model.Channel{
@@ -50,10 +50,22 @@ func (yt Youtube) GetChannel(name string) model.Channel {
 
 func (yt Youtube) ListVideos(channel *model.Channel, page int64) ([]model.Video, string) {
 	itemsRequest := yt.ytservice.PlaylistItems.List("id,snippet,contentDetails").
-		PlaylistId(channel.UploadsPlaylist).MaxResults(20).PageToken(getPageToken(page * 20))
+		PlaylistId(channel.UploadsPlaylist).MaxResults(20)
 	itemsResponse, err := itemsRequest.Do()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("56 %v", err)
+	}
+
+	var currentPage int64 = 0
+	for currentPage < page {
+		itemsRequest := yt.ytservice.PlaylistItems.List("id,snippet,contentDetails").
+			PlaylistId(channel.UploadsPlaylist).MaxResults(20).PageToken(itemsResponse.NextPageToken)
+		itemsResponse, err = itemsRequest.Do()
+		if err != nil {
+			log.Fatalf("56 %v", err)
+		}
+
+		currentPage += 1
 	}
 
 	Youtube := make([]model.Video, len(itemsResponse.Items))
@@ -80,6 +92,8 @@ func getWeights(bases []int64, number int64) []int64 {
 }
 
 func getPageToken(page int64) string {
+	fmt.Println("asdasd")
+	fmt.Println(page)
 	b64 := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 	x := getWeights([]int64{65536, 16384, 8192, 128, 16, 1}, page)

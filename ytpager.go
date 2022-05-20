@@ -88,7 +88,7 @@ func (h VideoListRoute) ServeHTTP(res http.ResponseWriter, req *http.Request, se
 	pageNum, _ := strconv.ParseInt(requestedPage, 0, 0)
 
 	channel := videoService.GetChannel(channelName)
-	videos, _ := videoService.ListVideos(&channel, pageNum-1)
+	videos, _ := videoService.ListVideos(&channel, pageNum)
 
 	videoPage := model.VideoPage{
 		Index:   pageNum,

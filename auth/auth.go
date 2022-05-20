@@ -81,23 +81,23 @@ func init() {
 		log.Printf("File error: %v\n", err)
 		os.Exit(1)
 	}
-	json.Unmarshal(file, &cred)
+	err = json.Unmarshal(file, &cred)
+	if err != nil {
+		log.Printf("Unmarshal error: %v\n", err)
+		os.Exit(1)
+	}
 
 	conf = &oauth2.Config{
 		ClientID:     cred.Cid,
 		ClientSecret: cred.Csecret,
-		RedirectURL:  "http://asadpatelytpager.mooo.com/auth/oauthurl",
+		RedirectURL:  "http://127.0.0.1:80/auth/oauthurl",
 		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.email", // You have to select your own scope from here -> https://developers.google.com/identity/protocols/googlescopes#google_sign-in
-			"https://www.googleapis.com/auth/youtube",        // You have to select your own scope from here -> https://developers.google.com/identity/protocols/googlescopes#google_sign-in
+			// "https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/youtube",
 		},
 		Endpoint: google.Endpoint,
 	}
 }
-
-// func indexHandler(c *gin.Context) {
-// 	c.HTML(http.StatusOK, "index.tmpl", gin.H{})
-// }
 
 func getLoginURL(state string) string {
 	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
